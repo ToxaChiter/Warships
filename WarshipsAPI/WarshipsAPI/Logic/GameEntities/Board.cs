@@ -4,6 +4,8 @@ namespace WarshipsAPI.Logic.GameEntities;
 public class Board
 {
     public int Size { get; set; } = 10; // Default size 10x10
+    public bool AreAllShipsSunk => Ships.All(ship => ship.IsSunk);
+
     public Cell[,] Cells { get; private set; }
     private List<Ship> Ships { get; set; }
 
@@ -60,6 +62,19 @@ public class Board
         }
 
         return null;
+    }
+
+    public (int X, int Y) GetCoords(Cell cell)
+    {
+        for (int i = 0; i < Size; i++)
+        {
+            for (int j = 0; j < Size; j++)
+            {
+                if (Cells[i, j] == cell) return (i, j);
+            }
+        }
+
+        return (-1, -1);
     }
 }
 

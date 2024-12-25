@@ -1,8 +1,10 @@
-﻿using WarshipsAPI.Data.Database;
+﻿using System.ComponentModel;
+using WarshipsAPI.Data.Database;
 using WarshipsAPI.Data.Dtos;
 using WarshipsAPI.Data.Models;
 using WarshipsAPI.Logic.GameEntities;
 using WarshipsAPI.Logic.Interfaces;
+using WarshipsAPI.SignalR;
 
 namespace WarshipsAPI.Logic.Services;
 
@@ -10,14 +12,16 @@ public class MoveService : IMoveService
 {
     private readonly WarshipDbContext _dbContext;
     private readonly IGameService _gameService;
+    private readonly GameHub _gameHub;
 
-    public MoveService(WarshipDbContext dbContext, IGameService gameService)
+    public MoveService(WarshipDbContext dbContext, IGameService gameService, GameHub gameHub)
     {
         _dbContext = dbContext;
         _gameService = gameService;
+        _gameHub = gameHub;
     }
 
-    public async Task<MoveResultDto> ProcessMoveAsync(Guid gameId, string coordinate)
+    public async Task<MoveResultDto> ProcessMoveAsync(Guid gameId, Guid playerId, string coordinate)
     {
         var game = await _gameService.GetGameByIdAsync(gameId);
         if (game == null || game.State != GameState.InProgress)
@@ -25,20 +29,17 @@ public class MoveService : IMoveService
             throw new InvalidOperationException("Invalid game state.");
         }
 
+        if (game.CurrentPlayerId != playerId) throw new ArgumentException("Not that player`s turn");
+
         // Проверка попадания
         Board board = game.CurrentPlayerId == game.Player1Id ? game.Player2Board : game.Player1Board;
         var (x, y) = GetIndexFromCoordinate(coordinate);
         bool isHit = board[x, y].State is CellState.Occupied;
         bool isSunk = false;
-        if (isHit)
-        {
-            var ship = board.GetShip(x, y);
-            if (ship is null) throw new Exception("Ship cannot be found");
-            isSunk = ship.IsSunk;
-        }
+        bool isGameOver = false;
 
         // Обновление состояния поля
-        board = UpdateBoard(board, coordinate, isHit);
+        board = await UpdateBoardAsync(board, coordinate);
         if (game.CurrentPlayerId == game.Player1Id)
         {
             game.Player2Board = board;
@@ -46,6 +47,17 @@ public class MoveService : IMoveService
         else
         {
             game.Player1Board = board;
+        }
+
+        if (isHit)
+        {
+            var ship = board.GetShip(x, y);
+            if (ship is null) throw new Exception("Ship cannot be found");
+            isSunk = ship.IsSunk;
+        }
+        if (isSunk)
+        {
+            isGameOver = await _gameService.CheckGameOverAsync(gameId);
         }
 
         // Сохранение хода
@@ -62,16 +74,28 @@ public class MoveService : IMoveService
         _dbContext.Moves.Add(move);
         await _dbContext.SaveChangesAsync();
 
+        await _gameHub.MakeMove(gameId, x, y);
+
+        if (isHit)
+        {
+            game.CurrentPlayerId = (playerId == game.Player1Id ? game.Player2Id : game.Player1Id);
+        }
+
+        if (isGameOver)
+        {
+            await _gameService.EndGameAsync(gameId, playerId);
+        }
+
         // Возврат результата хода
         return new MoveResultDto
         {
             IsHit = isHit,
-            IsSunk = 
+            IsSunk = isSunk,
             IsGameOver = await _gameService.CheckGameOverAsync(gameId)
         };
     }
 
-    private void UpdateBoard(Board board, string coordinate, bool isHit)
+    private async Task<Board> UpdateBoardAsync(Board board, string coordinate)
     {
         var (x, y) = GetIndexFromCoordinate(coordinate);
         var cell = board[x, y];
@@ -82,9 +106,48 @@ public class MoveService : IMoveService
             _ => throw new ArgumentException("Invalid cell state on hit")
         };
         cell.State = newState;
+
+        var ship = board.GetShip(x, y);
+        if (ship is null) throw new Exception("Ship cannot be found");
+
+        if (!ship.IsSunk)
+        {
+            return board;
+        }
+
+        List<(int X, int Y)> offsets = 
+        [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1), (0, 0), (0, 1),
+            (1, -1), (1, 0), (1, 1),
+        ];
+
+        foreach (var coord in ship.Coordinates)
+        {
+            var point = board.GetCoords(coord);
+            if (point == (-1, -1)) throw new Exception("Cell cannot be found");
+
+            foreach (var offset in offsets)
+            {
+                var (X, Y) = (point.X + offset.X, point.Y + offset.Y);
+                if (X < 0 || X >= board.Size || Y < 0 || Y >= board.Size)
+                {
+                    continue;
+                }
+
+                var square = board[X, Y];
+                if (square.State is CellState.Empty)
+                {
+                    square.State = CellState.Miss;
+                }
+            }
+        }
+
+        await _dbContext.SaveChangesAsync();
+        return board;
     }
 
-    private (int X, int Y) GetIndexFromCoordinate(string coordinate)
+    private static (int X, int Y) GetIndexFromCoordinate(string coordinate)
     {
         // Преобразование координаты (например, "A1") в индекс строки
         char letter = coordinate[0];
@@ -92,48 +155,5 @@ public class MoveService : IMoveService
 
         return (letter - 'A', int.Parse(digit));
     }
-
-
-
-    public async Task<MoveResult> MakeMoveAsync(string gameId, MoveRequest request)
-    {
-        var game = await _gameRepository.GetGameAsync(gameId);
-        if (game == null) throw new Exception("Game not found");
-
-        if (game.Turn != request.PlayerId)
-            return new MoveResult { Success = false, Errors = new[] { "Not your turn!" } };
-
-        var cell = game.Board.FirstOrDefault(c => c.X == request.X && c.Y == request.Y);
-        if (cell == null || cell.State != CellState.Empty)
-            return new MoveResult { Success = false, Errors = new[] { "Invalid move!" } };
-
-        if (cell.HasShip)
-        {
-            cell.State = CellState.Hit;
-            // Дополнительная логика потопления корабля
-        }
-        else
-        {
-            cell.State = CellState.Miss;
-        }
-
-        // Проверка окончания игры
-        var isGameOver = CheckGameOver(game);
-        if (isGameOver)
-        {
-            game.Status = GameStatus.Finished;
-            game.WinnerId = request.PlayerId;
-        }
-        else
-        {
-            // Передача хода
-            game.Turn = GetNextPlayerId(game);
-        }
-
-        await _gameRepository.UpdateGameAsync(game);
-
-        return new MoveResult { Success = true, UpdatedBoard = game.Board };
-    }
-
 }
 

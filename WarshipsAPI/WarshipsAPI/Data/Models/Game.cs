@@ -5,6 +5,7 @@ namespace WarshipsAPI.Data.Models;
 public enum GameState
 {
     Waiting,    // Ожидание второго игрока
+    Initializing, // Расстановка кораблей
     InProgress, // Игра идёт
     Finished    // Игра завершена
 }

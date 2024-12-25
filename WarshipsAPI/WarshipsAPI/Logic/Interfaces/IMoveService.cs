@@ -4,6 +4,6 @@ namespace WarshipsAPI.Logic.Interfaces;
 
 public interface IMoveService
 {
-    Task<MoveResultDto> ProcessMoveAsync(Guid gameId, string coordinate);
+    Task<MoveResultDto> ProcessMoveAsync(Guid gameId, Guid playerId, string coordinate);
 }
 
