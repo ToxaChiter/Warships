@@ -1,0 +1,177 @@
+﻿<Page x:Class="Warships.Pages.LoginPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Warships.Pages"
+      mc:Ignorable="d"
+      Title="LoginPage"
+      Background="#303030">
+    
+    <Page.Resources>
+        <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter"/>
+
+        <Style x:Key="LoginButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="DarkGray"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="LightGray"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                        BorderBrush="{TemplateBinding BorderBrush}" 
+                        BorderThickness="{TemplateBinding BorderThickness}" 
+                        CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="Gray"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Page.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="175*"/>
+            <ColumnDefinition Width="400*"/>
+            <ColumnDefinition Width="175*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="75*"/>
+            <RowDefinition Height="300*"/>
+            <RowDefinition Height="75*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Фон для страницы --><!--
+        <Border Background="#303030" Grid.ColumnSpan="3" Grid.RowSpan="3"/>-->
+
+        <!-- Основной контейнер -->
+        <Border x:Name="LoginBorder"
+                Background="#80000000"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" 
+                CornerRadius="20"
+                Grid.Row="1"
+                Grid.Column="1">
+
+            <Grid x:Name="LoginGrid">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40*"/>
+                    <ColumnDefinition Width="320*"/>
+                    <ColumnDefinition Width="40*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Заголовок -->
+                <TextBlock Text="Авторизация"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Grid.Column="1"
+                           Grid.Row="0"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+
+                <!-- Поле для логина -->
+                <Grid Grid.Column="1" Grid.Row="2">
+                    <TextBox x:Name="LoginBox"
+                             FontSize="14"
+                             FontFamily="Montserrat"                            
+                             Foreground="White"
+                             CaretBrush="LightGray"
+                             Background="Transparent"
+                             BorderBrush="Gray"
+                             BorderThickness="0,0,0,2"
+                             HorizontalAlignment="Stretch" 
+                             VerticalAlignment="Center"
+                             MaxLines="1"
+                             MaxLength="20"
+                             Padding="10,0,0,0"
+                             TextChanged="Login_TextChanged"/>
+                    <TextBlock Text="Введите логин"
+                               Foreground="Gray"
+                               Margin="15,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"
+                               Visibility="{Binding Text, ElementName=LoginBox, Converter={StaticResource EmptyStringToVisibilityConverter}}"/>
+                </Grid>
+
+                <!-- Поле для пароля -->
+                <Grid Grid.Column="1" Grid.Row="4" Name="PasswordGrid">
+                    <PasswordBox x:Name="PasswordBox"
+                                 FontSize="14"
+                                 FontFamily="Montserrat"                            
+                                 Foreground="White"
+                                 CaretBrush="LightGray"
+                                 Background="Transparent"
+                                 BorderBrush="Gray"
+                                 BorderThickness="0,0,0,2"
+                                 HorizontalAlignment="Stretch" 
+                                 VerticalAlignment="Center"
+                                 MaxLength="16"
+                                 Padding="10,0,0,0"
+                                 PasswordChanged="PasswordBox_PasswordChanged">
+                    </PasswordBox>
+                    <TextBlock Text="Введите пароль"
+                               Foreground="Gray"
+                               Margin="15,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"
+                               Name="PasswordPlaceholder"/>
+                </Grid>
+
+                <!-- Кнопка для входа -->
+                <Button x:Name="LoginButton"
+                        Content="Войти"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        Style="{StaticResource LoginButtonStyle}"
+                        Grid.Column="1"
+                        Grid.Row="6"
+                        HorizontalAlignment="Stretch"
+                        Height="40"
+                        Margin="0,10,0,0"
+                        VerticalAlignment="Top"
+                        IsEnabled="False"
+                        Click="LoginButton_Click">
+                </Button>
+
+                <!-- Кнопка для входа -->
+                <Button x:Name="RegistrationButton"
+                        Content="Зарегистрироваться"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        Style="{StaticResource LoginButtonStyle}"
+                        Grid.Column="1"
+                        Grid.Row="8"
+                        HorizontalAlignment="Stretch"
+                        Height="40"
+                        Margin="0,10,0,0"
+                        VerticalAlignment="Top"
+                        Click="RegistrationButton_Click">
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

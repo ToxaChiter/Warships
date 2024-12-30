@@ -9,12 +9,17 @@ public class WarshipDbContext : DbContext
     public DbSet<Game> Games { get; set; } = null!;
     public DbSet<Move> Moves { get; set; } = null!;
 
+    public WarshipDbContext()
+    {
+        Database.EnsureCreated();
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Настройка связей
+        //Настройка связей
         modelBuilder.Entity<Game>()
             .HasOne(g => g.Player1)
-            .WithMany(u => u.Games)
+            .WithMany()
             .HasForeignKey(g => g.Player1Id);
 
         modelBuilder.Entity<Game>()

@@ -1,7 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using WarshipsAPI.Logic.GameEntities;
+﻿using Warships.Logic.GameEntities;
 
-namespace WarshipsAPI.Data.Models;
+namespace Warships.Models;
 
 public enum GameState
 {
@@ -14,14 +13,12 @@ public enum GameState
 public class Game
 {
     public Guid Id { get; set; }
-    public Guid? Player1Id { get; set; }
-    public Guid? Player2Id { get; set; }
+    public Guid Player1Id { get; set; }
+    public Guid Player2Id { get; set; }
     public User Player1 { get; set; } = null!;
     public User Player2 { get; set; } = null!;
 
-    [NotMapped]
     public Board Player1Board { get; set; }
-    [NotMapped]
     public Board Player2Board { get; set; }
 
     public GameState State { get; set; } = GameState.Waiting;

@@ -1,10 +1,8 @@
-﻿using System.ComponentModel;
-using WarshipsAPI.Data.Database;
+﻿using WarshipsAPI.Data.Database;
 using WarshipsAPI.Data.Dtos;
 using WarshipsAPI.Data.Models;
 using WarshipsAPI.Logic.GameEntities;
 using WarshipsAPI.Logic.Interfaces;
-using WarshipsAPI.SignalR;
 
 namespace WarshipsAPI.Logic.Services;
 
@@ -12,18 +10,16 @@ public class MoveService : IMoveService
 {
     private readonly WarshipDbContext _dbContext;
     private readonly IGameService _gameService;
-    private readonly GameHub _gameHub;
 
-    public MoveService(WarshipDbContext dbContext, IGameService gameService, GameHub gameHub)
+    public MoveService(WarshipDbContext dbContext, IGameService gameService)
     {
         _dbContext = dbContext;
         _gameService = gameService;
-        _gameHub = gameHub;
     }
 
     public async Task<MoveResultDto> ProcessMoveAsync(Guid gameId, Guid playerId, string coordinate)
     {
-        var game = await _gameService.GetGameByIdAsync(gameId);
+        var game = GameService.Games.Find(game => game.Id == gameId);
         if (game == null || game.State != GameState.InProgress)
         {
             throw new InvalidOperationException("Invalid game state.");
@@ -74,11 +70,11 @@ public class MoveService : IMoveService
         _dbContext.Moves.Add(move);
         await _dbContext.SaveChangesAsync();
 
-        await _gameHub.MakeMove(gameId, x, y);
+        //await _gameHub.MakeMove(gameId, x, y);
 
-        if (isHit)
+        if (!isHit)
         {
-            game.CurrentPlayerId = (playerId == game.Player1Id ? game.Player2Id : game.Player1Id);
+            game.CurrentPlayerId = (playerId == game.Player1Id ? game.Player2Id : game.Player1Id).Value;
         }
 
         if (isGameOver)
@@ -107,15 +103,22 @@ public class MoveService : IMoveService
         };
         cell.State = newState;
 
+        if (newState is CellState.Miss)
+        {
+            await _dbContext.SaveChangesAsync();
+            return board;
+        }
+
         var ship = board.GetShip(x, y);
         if (ship is null) throw new Exception("Ship cannot be found");
 
         if (!ship.IsSunk)
         {
+            await _dbContext.SaveChangesAsync();
             return board;
         }
 
-        List<(int X, int Y)> offsets = 
+        List<(int X, int Y)> offsets =
         [
             (-1, -1), (-1, 0), (-1, 1),
             (0, -1), (0, 0), (0, 1),
@@ -149,11 +152,14 @@ public class MoveService : IMoveService
 
     private static (int X, int Y) GetIndexFromCoordinate(string coordinate)
     {
-        // Преобразование координаты (например, "A1") в индекс строки
-        char letter = coordinate[0];
-        var digit = coordinate[1..];
+        //// Преобразование координаты (например, "A1") в индекс строки
+        //char letter = coordinate[0];
+        //var digit = coordinate[1..];
 
-        return (letter - 'A', int.Parse(digit));
+        //return (letter - 'A', int.Parse(digit));
+
+        var dimensions = coordinate.Split(',');
+        return (int.Parse(dimensions[0]), int.Parse(dimensions[1]));
     }
 }
 

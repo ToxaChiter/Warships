@@ -51,7 +51,7 @@ public class UserService : IUserService
 
     public async Task<UserStatsDto> GetUserStatisticsAsync(Guid userId)
     {
-        var user = await _dbContext.Users.Include(u => u.Games).FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) throw new KeyNotFoundException("User not found");
 
         return new UserStatsDto

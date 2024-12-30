@@ -40,10 +40,11 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseAuthorization();
+//app.UseAuthorization();
 
 app.MapControllers();
 
 app.MapHub<GameHub>("/gamehub");
+app.MapHub<TestHub>("/testhub");
 
 app.Run();

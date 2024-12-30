@@ -11,12 +11,12 @@ namespace WarshipsAPI.Logic.Services;
 public class GameService : IGameService
 {
     private readonly WarshipDbContext _dbContext;
-    private readonly GameHub _gameHub;
 
-    public GameService(WarshipDbContext dbContext, GameHub gameHub)
+    public static List<Game> Games { get; private set; } = [];
+
+    public GameService(WarshipDbContext dbContext)
     {
         _dbContext = dbContext;
-        _gameHub = gameHub;
     }
 
     public async Task<Game> CreateGameAsync(Guid player1Id, Guid player2Id)
@@ -30,31 +30,35 @@ public class GameService : IGameService
             StartedAt = DateTime.UtcNow
         };
 
+        Games.Add(game);
+
         _dbContext.Games.Add(game);
         await _dbContext.SaveChangesAsync();
         return game;
     }
 
-    public async void InitializeBoardAsync(Guid gameId, Guid playerId, List<(int x1, int y1, int x2, int y2)> ships)
+    public async Task InitializeBoardAsync(Guid gameId, Guid playerId, List<(int x1, int y1, int x2, int y2)> ships)
     {
-        var game = await GetGameByIdAsync(gameId);
+        var game = Games.Find(game => game.Id == gameId);
         if (game is null) throw new KeyNotFoundException("Game not found");
 
-        Board board;
+        Board board = new();
+        board.Initialize(ships);
+
         if (playerId == game.Player1Id)
         {
-            board = game.Player1Board;
+            game.Player1Board = board;
         }
         else if (playerId == game.Player2Id) 
         { 
-            board = game.Player2Board; 
+            game.Player2Board = board;
         }
         else
         {
             throw new KeyNotFoundException("Unknown player in match");
         }
 
-        board.Initialize(ships);
+        await _dbContext.SaveChangesAsync();
     }
 
     public async Task<Game?> GetGameByIdAsync(Guid gameId)
@@ -82,7 +86,7 @@ public class GameService : IGameService
 
     public async Task<bool> CheckGameOverAsync(Guid gameId)
     {
-        var game = await GetGameByIdAsync(gameId);
+        var game = Games.Find(game => game.Id == gameId);
         if (game is null) throw new KeyNotFoundException("Game not found");
 
         // Пример логики завершения
@@ -102,8 +106,6 @@ public class GameService : IGameService
         game.State = GameState.Finished;
 
         await _dbContext.SaveChangesAsync();
-
-        await _gameHub.NotifyGameEnded(gameId, winnerId);
     }
 }
 

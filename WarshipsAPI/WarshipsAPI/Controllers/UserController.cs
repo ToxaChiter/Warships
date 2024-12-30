@@ -27,7 +27,7 @@ public class UserController : ControllerBase
             return BadRequest("Reg error");
         }
 
-        return Ok(result);
+        return Ok(result.Id);
     }
 
     [HttpPost("login")]
@@ -39,6 +39,6 @@ public class UserController : ControllerBase
             return BadRequest("Auth error");
         }
 
-        return Ok(result);
+        return Ok(result.Id);
     }
 }

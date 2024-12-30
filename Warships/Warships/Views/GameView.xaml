@@ -1,0 +1,175 @@
+﻿<Page x:Class="Warships.Views.GameView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Warships.Views" xmlns:viewmodels="clr-namespace:Warships.ViewModels" 
+        xmlns:local1="clr-namespace:Warships.Pages"
+        d:DataContext="{d:DesignInstance Type=viewmodels:GameVM}"
+        mc:Ignorable="d"
+        Title="Игровой процесс" Background="LightBlue" Loaded="Page_Loaded">
+
+    <Page.Resources>
+            <LinearGradientBrush x:Key="GridBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#ADD8E6" Offset="0.0"/>
+                <GradientStop Color="#1E90FF" Offset="1.0"/>
+            </LinearGradientBrush>
+
+            <local1:CellStateToIsEnabledConverter x:Key="CellStateToIsEnabledConverter"/>
+
+            <Style x:Key="CellStyle" TargetType="Button">
+                <Setter Property="Background" Value="#ADD8E6"/>
+                <Setter Property="Width" Value="30"/>
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="Margin" Value="1"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="BorderBrush" Value="#FFFFFF"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect Color="#D3D3D3" ShadowDepth="1" BlurRadius="5"/>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#B0E0E6"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+        <!-- Стиль для кнопок-клеток -->
+        <Style x:Key="CellStyleSheet" TargetType="Button">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="BorderBrush" Value="Gray"/>
+            <Setter Property="BorderThickness" Value="0.5"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="Red"/>
+                                <Setter Property="BorderThickness" Value="5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+
+            <!--<Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="Red"/>
+                    <Setter Property="BorderThickness" Value="5"/>
+                </Trigger>
+            </Style.Triggers>-->
+        </Style>
+
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource GridBackgroundBrush}"/>
+                <Setter Property="Foreground" Value="#FFFFFF"/>
+                <Setter Property="Width" Value="100"/>
+                <Setter Property="Height" Value="40"/>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect Color="#D3D3D3" ShadowDepth="1" BlurRadius="5"/>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="#1E90FF"/>
+                        <Setter Property="Opacity" Value="0.8"/>
+                    </Trigger>
+            </Style.Triggers>
+
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="10"/>
+                </Style>
+            </Style.Resources>
+        </Style>
+        </Page.Resources>
+
+    <StackPanel Orientation="Vertical">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Сетка игрока -->
+            <StackPanel Grid.Column="0" Margin="10">
+                <TextBlock Text="Ваше поле" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <ItemsControl x:Name="PlayerGrid" ItemsSource="{Binding PlayerBoard.Field}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="10" Columns="10" HorizontalAlignment="Center"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <!-- Генерация клеток для игрока -->
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource CellStyleSheet}" Background="{Binding Brush}" IsEnabled="False">
+                                <!--<Button.Background>
+                                    <ImageBrush ImageSource="{Binding ImagePath}"/>
+                                </Button.Background>-->
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+
+            <!-- Сетка противника -->
+            <StackPanel Grid.Column="1" Margin="10">
+                <TextBlock Text="Поле противника" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <ItemsControl x:Name="EnemyGrid" ItemsSource="{Binding EnemyBoard.Field}" IsEnabled="{Binding IsMyTurn}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="10" Columns="10" HorizontalAlignment="Center"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <!-- Генерация клеток для противника -->
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource CellStyleSheet}" Command="{Binding Path=CellCommand}" CommandParameter="{Binding}" Background="{Binding Brush}" Click="Button_Click" 
+                                    IsEnabled="{Binding State, Converter={StaticResource CellStateToIsEnabledConverter}}">
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Grid>
+
+        <!-- Статусная панель -->
+        <StackPanel Margin="10">
+            <TextBlock Text="Статус игры" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+            <TextBlock x:Name="CurrentPlayerText" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Text="Your turn!"/>
+            <Expander Header="Move history" FontSize="20" HorizontalAlignment="Center" IsExpanded="True" MaxHeight="300">
+                <ListBox x:Name="MoveHistoryListView" FontSize="16" HorizontalAlignment="Center" ItemsSource="{Binding History}" >
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="IsEnabled" Value="False"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+            </Expander>
+        </StackPanel>
+    </StackPanel>
+</Page>

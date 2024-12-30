@@ -5,8 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Warships"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Морской бой" Height="450" Width="800">
+    <!--<Grid>-->
+    <!--<Button Command="{Binding PlayCommand}" Content="Играть" Width="100" Height="50" HorizontalAlignment="Center" VerticalAlignment="Top" />
+        <Button Command="{Binding LeaderboardCommand}" Content="Лидерборд" Width="100" Height="50" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding UserStats}" HorizontalAlignment="Center" VerticalAlignment="Bottom" />-->
+    <!--</Grid>-->
 
-    </Grid>
+    <Frame x:Name="MainFrame"
+       NavigationUIVisibility="Hidden"/>
 </Window>

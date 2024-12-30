@@ -1,4 +1,4 @@
-﻿namespace WarshipsAPI.Data.Models;
+﻿namespace Warships.Models;
 
 public class User
 {
@@ -6,6 +6,9 @@ public class User
     public string Username { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Навигационные свойства
+    public ICollection<Game> Games { get; set; } = new List<Game>();
 
     // Статистика
     public int GamesPlayed { get; set; } // Всего игр

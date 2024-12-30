@@ -19,6 +19,14 @@ namespace Warships
         public MainWindow()
         {
             InitializeComponent();
+            App.MainWindow = this;
+            ChangePage(new Uri("Pages/LoginPage.xaml", UriKind.Relative));
+            //ChangePage(new Uri("Views/TestView.xaml", UriKind.Relative));
+        }
+
+        public void ChangePage(Uri source)
+        {
+            MainFrame.Navigate(source);
         }
     }
 }

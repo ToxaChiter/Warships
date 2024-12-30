@@ -1,10 +1,13 @@
-﻿
-namespace WarshipsAPI.Logic.GameEntities;
+﻿using System.Collections.ObjectModel;
+
+namespace Warships.Logic.GameEntities;
 
 public class Board
 {
     public int Size { get; set; } = 10; // Default size 10x10
     public bool AreAllShipsSunk => Ships.All(ship => ship.IsSunk);
+
+    public ObservableCollection<Cell> Field { get; }
 
     public Cell[,] Cells { get; private set; }
     private List<Ship> Ships { get; set; }
@@ -21,6 +24,7 @@ public class Board
         }
 
         Ships = [];
+        Field = new ObservableCollection<Cell>(Cells.Cast<Cell>());
     }
 
     public void Initialize(List<(int x1, int y1, int x2, int y2)> coords)
@@ -32,7 +36,6 @@ public class Board
             {
                 for(int y = y1; y <= y2; y++)
                 {
-                    Cells[x, y].State = CellState.Occupied;
                     list.Add(Cells[x, y]);
                 }
             }
@@ -53,7 +56,7 @@ public class Board
         }
     }
 
-    public Ship? GetShip(int x, int y)
+    public Ship GetShip(int x, int y)
     {
         var cell = Cells[x, y];
 
@@ -62,7 +65,7 @@ public class Board
             if (ship.Coordinates.Contains(cell)) return ship;
         }
 
-        return null;
+        return default;
     }
 
     public (int X, int Y) GetCoords(Cell cell)

@@ -33,9 +33,9 @@ public class GameHub : Hub
     }
 
     // Уведомление о смене хода
-    public async Task NotifyTurnChange(Guid gameId, Guid currentPlayerId)
+    public async Task NotifyTurnChange(Guid gameId)
     {
-        await Clients.Group(gameId.ToString()).SendAsync("TurnChanged", new { CurrentPlayerId = currentPlayerId });
+        await Clients.Group(gameId.ToString()).SendAsync("TurnChanged");
     }
 
     // Уведомление об окончании игры
